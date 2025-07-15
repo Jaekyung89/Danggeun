@@ -6,7 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.3</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <groupId>org.example</groupId>
     <artifactId>Danggeun</artifactId>
@@ -30,6 +30,13 @@
         <java.version>17</java.version>
     </properties>
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>com.theokanning.openai-gpt3-java</groupId>-->
+<!--            <artifactId>service</artifactId>-->
+<!--            <version>0.18.2</version>-->
+<!--        </dependency>-->
+<!--        위 코드는 챗에서 사용할 api 관련 코드-->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-client</artifactId>
@@ -45,6 +52,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
         <dependency>

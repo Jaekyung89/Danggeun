@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>채팅방</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #fffdf5;
+      padding: 0 20px;
+    }
+
+    .header-spacer {
+      height: 60px;
+    }
+
+    .chat-wrapper {
+      width: 1100px;
+      margin: 80px auto 0; /* added top margin for header */
+      display: flex;
+      height: calc(100vh - 80px); /* subtract top margin from height */
+      background-color: #fef9ec;
+    }
+
+    .sidebar {
+      width: 260px;
+      background-color: #fff;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+    }
+
+    .sidebar h2 {
+      margin: 0 20px 10px;
+      font-size: 16px;
+    }
+
+    .chat-list {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .chat-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-item span {
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+    .chat-item img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-left: 12px;
+    }
+
+    .chat-item:hover {
+      background-color: #fff4da;
+    }
+
+    .chat-item.unread span::after {
+      content: '●';
+      color: #ff6f0f;
+      font-size: 12px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .main-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: #fff;
+    }
+
+    .product-info {
+      display: flex; justify-content: space-between; align-items: flex-start; position: relative;
+      border-bottom: 1px solid #eee;
+      background-color: #fff;
+      padding: 20px;
+    }
+
+    .product-info .title {
+      font-weight: bold;
+    }
+
+    .product-info .price {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .product-info button {
+      background-color: #ff6f0f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    .chat-area {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .message.other {
+      background-color: #f1f1f1;
+      align-self: flex-start;
+    }
+
+    .message.me {
+      background-color: #ff6f0f;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .input-area {
+      padding: 12px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      background-color: #fff;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .input-area button {
+      background-color: #ff6f0f;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .highlight {
+      background-color: #ff6f0f;
+      color: white;
+      font-size: 13px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+      vertical-align: middle;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .slider {
+      background-color: #ff6f0f;
+    }
+
+    .toggle-switch input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+<body>
+<div class="header-spacer"></div>
+<div class="chat-wrapper">
+  <div class="sidebar">
+    <div style="padding: 0 20px 10px; display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="margin: 0; font-size: 16px;">내 아이디</h2>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 14px;">읽지 않은 항목</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="unreadToggle" onchange="toggleUnread()" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <hr style="margin: 0 0 10px; border: none; border-top: 1px solid #ddd;" />
+    <div class="chat-list">
+      <!-- 챗봇은 항상 상단 고정 -->
+      <div class="chat-item" style="background-color: #fff4da;" onclick="openBotChat()">
+        <div style="display: flex; align-items: center;">
+            <img src="/images/dangguen.svg" alt="bot" style="width: 28px; height: 28px; margin-right: 10px;" />
+          <span><strong>AI 챗봇</strong><small>궁금한 내용을 물어보세요!</small></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-chat">
+    <div class="product-info" style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+      <div style="flex: 1;">
+        <div class="buyer-id" style="margin-bottom: 8px; font-size: 14px; color: #555;">
+          <strong th:text="${dto.buyerId}">상대방 아이디</strong>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <img th:src="@{${dto.imageUrl}}" alt="product" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-top: 2px;" /><div style="display: flex; flex-direction: column;">
+            <div class="title" style="font-weight: bold;" th:text="${dto.title}">제목</div>
+            <div class="price" th:text="${dto.productPrice} + '원'" style="font-size: 14px; color: #888;">150,000원</div>
+          </div>
+        </div>
+      </div>
+      <div style="align-self: flex-end;">
+        <button style="background-color: #ff6f0f; color: white; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;">거래완료</button>
+      </div>
+    </div>
+
+    <div class="chat-area" id="chatBox">
+      <div class="message other">입금 확인했습니다~ 거래 감사합니다 구매자분도 오늘 이사 잘 하시길 바라요! 좋은 하루 보내세요ㅎㅎ</div>
+      <div class="message me">넵! 감사합니다! 이사 잘 하시고 좋은 하루 되시길 바라요ㅎㅎ 배달조심하세요~!</div>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="chatInput" placeholder="메시지를 입력해주세요" />
+      <button onclick="sendMessage()">전송</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    // 사용자 메시지 표시
+    const userMsg = document.createElement("div");
+    userMsg.className = "message me";
+    userMsg.innerText = text;
+    document.getElementById("chatBox").appendChild(userMsg);
+
+    input.value = "";
+
+    try {
+      const isAiChat = document.getElementById("chatInput").getAttribute("data-chat-type") === "ai";
+      const res = await fetch(isAiChat ? '/api/chat/ai' : '/api/chat/general', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+          isAiChat
+            ? { question: text }
+            : {
+                senderId: document.getElementById("chatInput").getAttribute("data-sender"),
+                receiverId: document.getElementById("chatInput").getAttribute("data-receiver"),
+                message: text
+              }
+        )
+      });
+      const answer = await res.text();
+
+      const botMsg = document.createElement("div");
+      botMsg.className = "message other";
+      botMsg.innerText = answer;
+      document.getElementById("chatBox").appendChild(botMsg);
+    } catch (e) {
+      const errorMsg = document.createElement("div");
+      errorMsg.className = "message other";
+      errorMsg.innerText = "AI 응답에 실패했습니다.";
+      document.getElementById("chatBox").appendChild(errorMsg);
+    }
+  }
+
+  function toggleUnread() {
+    const showUnreadOnly = document.getElementById("unreadToggle").checked;
+    const allItems = document.querySelectorAll(".chat-item");
+    allItems.forEach(item => {
+      const isUnread = item.classList.contains("unread");
+      const isBot = item.innerText.includes("AI 챗봇");
+      if (isBot || !showUnreadOnly || isUnread) {
+        item.style.display = "flex";
+      } else {
+        item.style.display = "none";
+      }
+    });
+  }
+
+</script>
+
+<script>
+  function openBotChat() {
+    document.getElementById("chatBox").innerHTML = "";
+    document.getElementById("chatInput").setAttribute("data-chat-type", "ai");
+  }
+
+  function openGeneralChat(senderId, receiverId) {
+    document.getElementById("chatBox").innerHTML = "";
+    document.getElementById("chatInput").setAttribute("data-chat-type", "general");
+    document.getElementById("chatInput").setAttribute("data-sender", senderId);
+    document.getElementById("chatInput").setAttribute("data-receiver", receiverId);
+  }
+</script>
+
+<script>
+  async function loadChatList(userId) {
+    try {
+      const res = await fetch(`/api/chat/list?userId=${userId}`);
+      const chatData = await res.json();
+      const listContainer = document.querySelector(".chat-list");
+
+      // 기존 항목 제거 (AI 챗봇 제외)
+      const items = listContainer.querySelectorAll(".chat-item:not(:first-child)");
+      items.forEach(item => item.remove());
+
+      chatData.forEach(chat => {
+        const item = document.createElement("div");
+        item.className = "chat-item";
+        if (!chat.read) item.classList.add("unread");
+        item.onclick = () => {
+          markAsRead(item);
+          openGeneralChat(chat.senderId, chat.receiverId);
+        };
+
+        item.innerHTML = `
+          <span>
+            ${chat.partnerId}<br>
+            <small>${chat.lastMessage.length > 10 ? chat.lastMessage.slice(0, 10) + '...' : chat.lastMessage}</small>
+          </span>
+          <img src="${chat.thumbnailUrl || '/images/sample.jpg'}" alt="product" />
+        `;
+        listContainer.appendChild(item);
+      });
+    } catch (err) {
+      console.error("채팅 목록 불러오기 실패:", err);
+    }
+  }
+
+  // 페이지 로드 시 실행 (로그인된 사용자 ID를 대입)
+  window.addEventListener("DOMContentLoaded", () => {
+    loadChatList("내아이디"); // ← 이 부분은 동적으로 서버에서 주입하거나 JS에서 가져오도록 나중에 수정 가능
+  });
+</script>
+</body>
+</html>
